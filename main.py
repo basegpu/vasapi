@@ -4,9 +4,8 @@ from bs4 import BeautifulSoup
 import re
 
 
-
 def main():
-    FindEventIdForYear(2020)
+    print(FindEventIdForYear(2020))
     
 
 def MakeSoupForUrl(url):
@@ -17,14 +16,17 @@ def MakeSoupForUrl(url):
 def FindEventIdForYear(year):
     url = 'https://results.vasaloppet.se/2022/?pid=list'
     soup = MakeSoupForUrl(url)
-    pattern = re.compile("Vasaloppet (Winter )?\d{4}")
+    eventPattern = re.compile("Vasaloppet (Winter )?\d{4}$")
+    racePattern = re.compile("Vasaloppet$")
     eventDic = {}
     for g in soup.find_all('optgroup'):
         label = g['label']
-        if pattern.match(label):
-            eventDic[int(label[-4::])] = "vasa"
-            print(g)
-    print(eventDic)
+        if eventPattern.match(label):
+            y = int(label[-4::])
+            for o in g.find_all('option'):
+                if racePattern.match(o.get_text()):
+                    eventDic[y] = o['value']
+    return eventDic[year]
 
 if __name__ == '__main__':
     main()
