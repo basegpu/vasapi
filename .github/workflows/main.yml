@@ -1,0 +1,45 @@
+name: python-docker-heroku CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+    
+#set environment variables 
+env:
+  HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+  APP_NAME: ${{ 'vasapi' }}
+
+jobs:
+
+  deploy:
+    name: Build, Test, and Deploy to Heroku
+    runs-on: ubuntu-18.04
+    steps:
+
+    # Clone the repository
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Testing
+      run: |
+        echo --- Running test cases ---
+        docker-compose -f docker-compose.yml up --build --exit-code-from tests tests
+        echo --- Completed test cases ---
+
+    - name: Publish Unit Test Results
+      uses: EnricoMi/publish-unit-test-result-action@v1
+      if: always()
+      with:
+        files: test/output/testresults.xml
+
+    # Build Docker image
+    - name: Docker build
+      run: docker login --username=_ --password=$HEROKU_API_KEY registry.heroku.com
+
+    # Push the Docker image to Heroku Container Registry and Create a release
+    - name: Publish abd Release
+      run: |
+        heroku container:push web -a $APP_NAME
+        heroku container:release web -a $APP_NAME
