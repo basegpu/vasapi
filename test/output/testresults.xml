@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="6" time="6.853" timestamp="2022-03-09T21:24:47.638910" hostname="5f87e526c812"><testcase classname="wrapper-tests" name="test_wrapper_init" time="0.299" /><testcase classname="wrapper-tests" name="test_wrapper_get_event" time="0.410" /><testcase classname="wrapper-tests" name="test_wrapper_get_result_2022[Sex.M-3363-VL6-6222]" time="1.690"><failure message="AssertionError: assert 'VL5' == 'VL6'&#10;  - VL6&#10;  + VL5">sex = &lt;Sex.M: 1&gt;, place = 3363, expected_group = 'VL6', expected_bib = '6222'
+
+    @pytest.mark.parametrize("sex,place,expected_group,expected_bib",[
+        (Sex.M, 3363, 'VL6', '6222'),
+        (Sex.M, 1, 'VL0', 'M15'),
+        (Sex.W, 100, 'VL4', '20204'),
+        (Sex.W, 101, 'VL4', '20142')
+        ])
+    def test_wrapper_get_result_2022(sex, place, expected_group, expected_bib):
+        wrapper = VasaloppetResultsWrapper()
+        event = wrapper.FindEventIdForYear(2022)
+        url = wrapper.GetResultUrl(event, sex, place)
+        result = wrapper.ParseResult(url)
+        assert result.Year == '2022'
+&gt;       assert result.Overall.StartGroup == expected_group
+E       AssertionError: assert 'VL5' == 'VL6'
+E         - VL6
+E         + VL5
+
+test/wrapper-tests.py:25: AssertionError</failure></testcase><testcase classname="wrapper-tests" name="test_wrapper_get_result_2022[Sex.M-1-VL0-M15]" time="1.113" /><testcase classname="wrapper-tests" name="test_wrapper_get_result_2022[Sex.W-100-VL4-20204]" time="1.306" /><testcase classname="wrapper-tests" name="test_wrapper_get_result_2022[Sex.W-101-VL4-20142]" time="1.264" /></testsuite></testsuites>
