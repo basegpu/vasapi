@@ -1,7 +1,7 @@
 from flask import Flask
 from werkzeug.exceptions import *
 from vasaloppet import app, wrapper
-from vasaloppet.VasaloppetResultsWrapper import Sex
+from vasaloppet.VasaloppetResultsWrapper import Sex, Result
 from .utils import *
 
 @app.route("/event/<year>")
@@ -18,9 +18,7 @@ def event_id(year):
 def result(year, sex, place):
     try:
         log_to_console('GET: result data for year %s, sex %s, and place %s'%(year, sex, place))
-        event = wrapper.FindEventIdForYear(int(year))
-        url = wrapper.GetResultUrl(event, Sex[sex.upper()], int(place))
-        result = wrapper.ParseResult(url)
+        result = wrapper.FindResultForYearSexPlace(int(year), Sex[sex.upper()], int(place))
         jsonStr = obj_to_json(result)
     except Exception as e:
         raise BadRequest(e)
