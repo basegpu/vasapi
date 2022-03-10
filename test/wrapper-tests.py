@@ -1,6 +1,7 @@
 import pytest
 import re
 from vasaloppet.VasaloppetResultsWrapper import *
+from vasaloppet.models import Sex
 
 def test_wrapper_init():
     wrapper = VasaloppetResultsWrapper()
