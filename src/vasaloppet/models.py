@@ -1,34 +1,35 @@
 from enum import Enum
+from dataclasses import dataclass
 
 class Sex(Enum):
     M = 1
     W = 2
 
+@dataclass
 class Event:
-    def __init__(self, year, eventID):
-        self.Year = year
-        self.ID = eventID
+    Year: int
+    ID: str
 
-class Overall:
-    def __init__(self, time, startGroup, place):
-        self.Time = time
-        self.Place = place
-        self.StartGroup = startGroup
+@dataclass
+class OverallItem:
+    Time: str
+    Place: int
+    StartGroup: str
 
-class Lopper:
-    def __init__(self, name, nation, sex, group, bib):
-        self.Name = name
-        self.Nation = nation
-        self.Sex = sex
-        self.Group = group
-        self.Bib = bib
+@dataclass
+class LopperItem:
+    Name: str
+    Nation: str
+    Sex: str
+    Group: str
+    Bib: int
 
+@dataclass
 class Result:
-    def __init__(self, year, place, lopper, overall):
-        self.Year = year
-        self.Place = place
-        self.Lopper = lopper
-        self.Overall = overall
+    Year: int
+    Place: int
+    Lopper: LopperItem
+    Overall: OverallItem
 
     @staticmethod
     def Make(sex, kvp):
@@ -37,9 +38,9 @@ class Result:
         placeTotal = kvp.get('Place (Total)')
         if placeTotal is not None:
             placeTotal = int(placeTotal)
-        overall = Overall(kvp['Time Total (Brutto)'], kvp.get('Start Group'), placeTotal)
+        overall = OverallItem(kvp['Time Total (Brutto)'], placeTotal, kvp.get('Start Group'))
         nameAndNation = kvp['Name'].rstrip(')').split('(')
         name = nameAndNation[0].rstrip(' ')
         nation = nameAndNation[1]
-        lopper = Lopper(name, nation, sex.name, kvp.get('Group'), kvp.get('Number'))
+        lopper = LopperItem(name, nation, sex.name, kvp.get('Group'), kvp.get('Number'))
         return Result(int(kvp['Year']), int(kvp['Place']), lopper, overall)

@@ -21,9 +21,10 @@ docs = FlaskApiSpec(app)
 
 wrapper = VasaloppetResultsWrapper()
 
-from vasaloppet.VasaloppetAPI import *
+from vasaloppet.endpoints import *
 
 api.add_resource(EventFinder, '/event/<int:year>')
-api.add_resource(ResultFinder, '/result/<int:year>/<string:sex>/<int:place>')
+api.add_resource(ResultFinder, '/result/<int:year>/<string:sex>/<int:place>', '/result/<string:sex>/<int:place>')
 
 docs.register(EventFinder)
+docs.register(ResultFinder)

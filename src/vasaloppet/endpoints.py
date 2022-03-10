@@ -8,7 +8,6 @@ from .utils import *
 from . import wrapper
 
 class EventFinder(MethodResource, Resource):
-
     @doc(
         tags=['raw'],
         description='Get the Vasaloppet event ID for specific year.',
@@ -29,12 +28,29 @@ class EventFinder(MethodResource, Resource):
             raise BadRequest(e)
         return EventSchema().dump(event)
 
-class ResultFinder(Resource):
+class ResultFinder(MethodResource, Resource):
+    @doc(
+        tags=['raw'],
+        description='Get the result of single lopper for specific year, defined by sex (M/W) and place.',
+        params={
+            'year': {
+                'description': 'The year of the Vasaloppet race.',
+                'example': 2022
+            },
+            'sex': {
+                'description': 'M for male, W for female lopper.',
+                'example': 'W'
+            },
+            'place': {
+                'description': 'The ranking among M or W.',
+                'example': 314
+            }
+        })
+    @marshal_with(ResultSchema)
     def get(self, year, sex, place):
         try:
             log_to_console('GET: result data for year %i, sex %s, and place %i'%(year, sex, place))
             result = wrapper.FindResultForYearSexPlace(year, Sex[sex.upper()], place)
-            jsonStr = obj_to_json(result)
         except Exception as e:
             raise BadRequest(e)
-        return jsonStr
+        return ResultSchema().dump(result)
