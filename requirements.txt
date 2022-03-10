@@ -1,4 +1,5 @@
 Flask>=2.0.1
+flask_restful
 gunicorn<20
 beautifulsoup4
 requests
