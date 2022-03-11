@@ -7,6 +7,8 @@ class VasaloppetResultsWrapper:
     BASE_URL = 'https://results.vasaloppet.se/2022/'
 
     def __init__(self):
+        self.__eventDic = {}
+        self.__resultDic = {}
         url = VasaloppetResultsWrapper.MakeUrlFromQuery('?', isList=True)
         log_to_console('loading event data from: ' + url)
         soup = VasaloppetResultsWrapper.MakeSoupFromUrl(url)
@@ -20,25 +22,34 @@ class VasaloppetResultsWrapper:
                 for o in g.find_all('option'):
                     if racePattern.match(o.get_text()):
                         self.__eventDic[y] = o['value']
-        log_to_console('successfully initialized vasaloppet wrapper')
+                        self.__resultDic[y] = {}
+        log_to_console('Successfully initialized vasaloppet wrapper.')
 
     def FindEventIdForYear(self, year):
         return self.__eventDic[year]
 
     def FindResultForYearSexPlace(self, year, sex, place):
-        event = self.FindEventIdForYear(year)
-        result = VasaloppetResultsWrapper.GetResult(event, sex, place)
-        # hack for buggy shifting in html list
-        while result.Place != place:
-            placeCorr = place + (place - result.Place)
-            result = VasaloppetResultsWrapper.GetResult(event, sex, placeCorr)
+        result = self.__resultDic[year].get(place)
+        if (result is not None):
+            log_to_console('Found result in cache.')
+        else:
+            log_to_console('Loading result from external source.')
+            event = self.FindEventIdForYear(year)
+            result = VasaloppetResultsWrapper.GetResult(event, sex, place)
+            self.__resultDic[year][place] = result
         return result
 
+    @staticmethod
     def GetResult(event, sex, place):
-        url = VasaloppetResultsWrapper.GetResultUrl(event, sex, place)
+        url, placeFound = VasaloppetResultsWrapper.GetResultUrl(event, sex, place)
+        # hack for buggy shifting in html list
+        while placeFound != place:
+                placeCorr = place + (place - placeFound)
+                url, placeFound = VasaloppetResultsWrapper.GetResultUrl(event, sex, placeCorr)
         kvp = VasaloppetResultsWrapper.ParseResult(url)
         return Result.Make(sex, kvp)
 
+    @staticmethod
     def GetResultUrl(eventID, sex, place):
         resultsPerPage = 100
         page = (place-1)/resultsPerPage + 1
@@ -46,9 +57,11 @@ class VasaloppetResultsWrapper:
         soup = VasaloppetResultsWrapper.MakeSoupFromUrl(url)
         rows = soup.find_all('li', class_='row')[1::] # skip header row
         iRow = (place-1)%resultsPerPage
-        linkRow = rows[iRow].find('h4', class_='type-fullname')
-        detailQuery = linkRow.find("a", href=True)["href"]
-        return VasaloppetResultsWrapper.MakeUrlFromQuery(detailQuery)
+        row = rows[iRow]
+        place = int(row.find('div', class_='numeric').get_text())
+        linkCell = row.find('h4', class_='type-fullname')
+        detailQuery = linkCell.find("a", href=True)["href"]
+        return (VasaloppetResultsWrapper.MakeUrlFromQuery(detailQuery), place)
 
     @staticmethod
     def ParseResult(resultUrl):

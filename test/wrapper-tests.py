@@ -1,5 +1,5 @@
 import pytest
-import re
+import re, time
 from vasaloppet.VasaloppetResultsWrapper import *
 from vasaloppet.models import Sex
 
@@ -23,3 +23,12 @@ def test_wrapper_get_result_2022(sex, place, expected_group, expected_bib):
     assert result.Year == 2022
     assert result.Overall.StartGroup == expected_group
     assert result.Lopper.Bib == expected_bib
+
+def test_wrapper_get_cached_result():
+    wrapper = VasaloppetResultsWrapper()
+    tic = time.perf_counter()
+    result = wrapper.FindResultForYearSexPlace(2022, Sex.M, 3362)
+    toc = time.perf_counter()
+    result = wrapper.FindResultForYearSexPlace(2022, Sex.M, 3362)
+    time2 = time.perf_counter() - toc
+    assert toc - tic > time2*10 # at least ten times faster
