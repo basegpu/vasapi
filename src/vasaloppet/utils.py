@@ -1,5 +1,4 @@
 import sys
-import json
 
 def log_to_console(msg, isError=False):
     if isError:

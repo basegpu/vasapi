@@ -17,4 +17,4 @@ CMD pytest test/*test*.py -v --junitxml="output/testresults.xml"
 
 FROM build AS runtime
 COPY src/main.py .
-CMD gunicorn -w 2 -b 0.0.0.0:$PORT "main:app"
+CMD gunicorn -w 1 -b 0.0.0.0:$PORT "main:app"

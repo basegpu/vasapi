@@ -3,6 +3,7 @@ from flask_restful import Api
 from apispec import APISpec
 from apispec.ext.marshmallow import MarshmallowPlugin
 from flask_apispec.extension import FlaskApiSpec
+import logging
 from .VasaloppetResultsWrapper import *
 
 app = Flask(__name__)
@@ -19,7 +20,9 @@ app.config.update({
 })
 docs = FlaskApiSpec(app)
 
+app.logger.setLevel(logging.INFO)
 wrapper = VasaloppetResultsWrapper()
+app.logger.info('Successfully initialized vasaloppet wrapper.')
 
 from vasaloppet.endpoints import *
 
