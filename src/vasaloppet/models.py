@@ -22,7 +22,7 @@ class LopperItem:
     Nation: str
     Sex: str
     Group: str
-    Bib: int
+    Bib: str
 
 @dataclass
 class Result:

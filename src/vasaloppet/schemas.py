@@ -9,7 +9,7 @@ class LopperSchema(Schema):
     Nation = fields.Str(default='')
     Sex = fields.Str(required=True)
     Group = fields.Str(default='')
-    Bib = fields.Int(default=0)
+    Bib = fields.Str(default='')
 
 class OverallSchema(Schema):
     Time = fields.Str(required=True)
