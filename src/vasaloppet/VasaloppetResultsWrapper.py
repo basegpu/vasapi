@@ -8,7 +8,6 @@ class VasaloppetResultsWrapper:
 
     def __init__(self):
         self.__eventDic = {}
-        self.__resultDic = {}
         url = VasaloppetResultsWrapper.MakeUrlFromQuery('?', isList=True)
         log_to_console('loading event data from: ' + url)
         soup = VasaloppetResultsWrapper.MakeSoupFromUrl(url)
@@ -22,7 +21,6 @@ class VasaloppetResultsWrapper:
                 for o in g.find_all('option'):
                     if racePattern.match(o.get_text()):
                         self.__eventDic[y] = o['value']
-                        self.__resultDic[y] = {}
         x = threading.Thread(target=self.BackgroundLoader, args=('dummy',), daemon=True)
         x.start()
 
@@ -30,15 +28,8 @@ class VasaloppetResultsWrapper:
         return self.__eventDic[year]
 
     def FindResultForYearSexPlace(self, year, sex, place):
-        result = self.__resultDic[year].get(place)
-        if (result is not None):
-            log_to_console('Found result in cache.')
-        else:
-            log_to_console('Loading result from external source.')
-            event = self.FindEventIdForYear(year)
-            result = VasaloppetResultsWrapper.GetResult(event, sex, place)
-            self.__resultDic[year][place] = result
-        return result
+        event = self.FindEventIdForYear(year)
+        return VasaloppetResultsWrapper.LoadResult(event, sex, place)
 
     def BackgroundLoader(self, name):
         log_to_console('Thread %s: starting'%name)
@@ -47,7 +38,7 @@ class VasaloppetResultsWrapper:
             log_to_console('Thread %s: still running...'%name)
 
     @staticmethod
-    def GetResult(event, sex, place):
+    def LoadResult(event, sex, place):
         url, placeFound = VasaloppetResultsWrapper.GetResultUrl(event, sex, place)
         # hack for buggy shifting in html list
         while placeFound != place:
