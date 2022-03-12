@@ -6,6 +6,7 @@ from flask_apispec.extension import FlaskApiSpec
 import logging
 from .VasaloppetResultsWrapper import *
 from .ResultContainer import ResultContainer
+from .BackgroundLoader import *
 
 app = Flask(__name__)
 api = Api(app)
@@ -23,8 +24,11 @@ docs = FlaskApiSpec(app)
 
 app.logger.setLevel(logging.INFO)
 wrapper = VasaloppetResultsWrapper()
-container = ResultContainer(wrapper.FindResultForYearSexPlace)
 app.logger.info('Successfully initialized vasaloppet wrapper.')
+container = ResultContainer(wrapper.FindResultForYearSexPlace)
+app.logger.info('Successfully initialized result container for caching.')
+loader = BackgroundLoader()
+app.logger.info('Successfully started backgruond loader to fill the cache.')
 
 from vasaloppet.endpoints import *
 

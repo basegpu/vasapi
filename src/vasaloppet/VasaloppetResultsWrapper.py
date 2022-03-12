@@ -1,4 +1,4 @@
-import requests, re, threading, time
+import requests, re
 from bs4 import BeautifulSoup
 from .models import Result
 from .utils import *
@@ -21,8 +21,6 @@ class VasaloppetResultsWrapper:
                 for o in g.find_all('option'):
                     if racePattern.match(o.get_text()):
                         self.__eventDic[y] = o['value']
-        x = threading.Thread(target=self.BackgroundLoader, args=('dummy',), daemon=True)
-        x.start()
 
     def FindEventIdForYear(self, year):
         return self.__eventDic[year]
@@ -30,12 +28,6 @@ class VasaloppetResultsWrapper:
     def FindResultForYearSexPlace(self, year, sex, place):
         event = self.FindEventIdForYear(year)
         return VasaloppetResultsWrapper.LoadResult(event, sex, place)
-
-    def BackgroundLoader(self, name):
-        log_to_console('Thread %s: starting'%name)
-        while True:
-            time.sleep(10)
-            log_to_console('Thread %s: still running...'%name)
 
     @staticmethod
     def LoadResult(event, sex, place):
