@@ -5,6 +5,7 @@ from apispec.ext.marshmallow import MarshmallowPlugin
 from flask_apispec.extension import FlaskApiSpec
 import logging
 from .VasaloppetResultsWrapper import *
+from .ResultContainer import ResultContainer
 
 app = Flask(__name__)
 api = Api(app)
@@ -22,6 +23,7 @@ docs = FlaskApiSpec(app)
 
 app.logger.setLevel(logging.INFO)
 wrapper = VasaloppetResultsWrapper()
+container = ResultContainer(wrapper.FindResultForYearSexPlace)
 app.logger.info('Successfully initialized vasaloppet wrapper.')
 
 from vasaloppet.endpoints import *

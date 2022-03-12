@@ -17,7 +17,7 @@ class CacheDic(dict[TKey, TValue]):
 	def GetOrInit(self, key: TKey) -> TValue:
 		value = self.TryGet(key)
 		if value is None:
-			value = self.__vInit()
+			value = self.__vInit(key)
 			self[key] = value
 		return value
 
@@ -26,29 +26,23 @@ class CacheDic(dict[TKey, TValue]):
 
 
 class SexResults(CacheDic[int, type(Result)]):
-	def __init__(self) -> None:
-		super(SexResults, self).__init__(lambda: None)
+	def __init__(self, resultCall) -> None:
+		super(SexResults, self).__init__(resultCall)
 
 class YearResults(CacheDic[type(Sex), type(SexResults)]):
-	def __init__(self) -> None:
-		super(YearResults, self).__init__(lambda: SexResults())
+	def __init__(self, resultForSex) -> None:
+		super(YearResults, self).__init__(lambda sex: SexResults(resultForSex(sex)))
 
 class ResultCache(CacheDic[int, type(YearResults)]):
-	def __init__(self) -> None:
-		super(ResultCache, self).__init__(lambda: YearResults())
+	def __init__(self, resultForYear) -> None:
+		super(ResultCache, self).__init__(lambda y: YearResults(resultForYear(y)))
 
 
 class ResultContainer:
 
-	def __init__(self):
-		self.__wrapper = VasaloppetResultsWrapper()
-		self.__cache = ResultCache()
+	def __init__(self, getter):
+		lambdaChain = lambda year: lambda sex: lambda place: getter(year, sex, place)
+		self.__cache = ResultCache(lambdaChain)
 
-	def TryGetResult(self, year, sex, place):
-		return self.GetOrAddEmptyForYear(year).TryGet(place)
-
-	def SetResult(self, year, sex, place, result):
-		self.GetOrAddEmptyForYear(year).AddOrUpdate(place, result)
-
-	def GetOrAddEmptyForYear(self, year):
-		return self.__cacheDic.GetOrAdd(year, CacheDic())
+	def Get(self, year, sex, place):
+		return self.__cache.GetOrInit(year).GetOrInit(sex).GetOrInit(place)

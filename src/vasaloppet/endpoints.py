@@ -5,7 +5,7 @@ from werkzeug.exceptions import *
 from .models import *
 from .schemas import *
 from .utils import *
-from . import wrapper
+from . import wrapper, container
 
 class EventFinder(MethodResource, Resource):
     @doc(
@@ -50,7 +50,7 @@ class ResultFinder(MethodResource, Resource):
     def get(self, year, sex, place):
         try:
             log_to_console('GET: result data for year %i, sex %s, and place %i'%(year, sex, place))
-            result = wrapper.FindResultForYearSexPlace(year, Sex[sex.upper()], place)
+            result = container.Get(year, Sex[sex.upper()], place)
         except Exception as e:
             raise BadRequest(e)
         return ResultSchema().dump(result)
