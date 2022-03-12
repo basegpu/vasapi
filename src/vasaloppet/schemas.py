@@ -4,6 +4,10 @@ class EventSchema(Schema):
     Year = fields.Int(required=True)
     ID = fields.Str(required=True)
 
+class CacheSizeSchema(Schema):
+    Items = fields.Int(required=True)
+    Bytes = fields.Int(required=True)
+
 class LopperSchema(Schema):
     Name = fields.Str(default='')
     Nation = fields.Str(default='')

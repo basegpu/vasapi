@@ -11,6 +11,11 @@ class Event:
     ID: str
 
 @dataclass
+class CacheSize:
+    Items: int
+    Bytes: int
+
+@dataclass
 class OverallItem:
     Time: str
     Place: int

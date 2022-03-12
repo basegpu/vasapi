@@ -54,3 +54,17 @@ class ResultFinder(MethodResource, Resource):
         except Exception as e:
             raise BadRequest(e)
         return ResultSchema().dump(result)
+
+class CacheManager(MethodResource, Resource):
+    @doc(
+        tags=['ops'],
+        description='Get the number of cached results and the corresponding total size (bytes) in memory.'
+    )
+    @marshal_with(CacheSizeSchema)
+    def get(self):
+        try:
+            log_to_console('GET: cache size')
+            cacheStatus = container.GetCacheSize()
+        except Exception as e:
+            raise BadRequest(e)
+        return CacheSizeSchema().dump(cacheStatus)
