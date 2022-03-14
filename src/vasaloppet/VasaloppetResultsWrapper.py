@@ -27,7 +27,8 @@ class VasaloppetResultsWrapper:
 
     def FindResultForYearSexPlace(self, year, sex, place) -> ResultDetail:
         event = self.FindEventIdForYear(year)
-        return VasaloppetResultsWrapper.LoadResult(event, sex, place)
+        item = VasaloppetResultsWrapper.FindResultItem(event, sex, place)
+        return VasaloppetResultsWrapper.GetResult(item.Url)
 
     def GetLopperList(self, year, size = 0) -> list:
         event = self.FindEventIdForYear(year)
@@ -42,25 +43,29 @@ class VasaloppetResultsWrapper:
                     loppers.append(candidate)
             else:
                 page += 1
+                log_to_console('loading page %i from year %i'%(page, year))
                 url = VasaloppetResultsWrapper.MakeUrlFromQuery('?page=%i&event=%s&lang=EN_CAP'%(page, event), 'search')
                 tableRows = VasaloppetResultsWrapper.ParseResultTable(url)
                 if tableRows is None:
                     break
         return loppers
 
-
     @staticmethod
-    def LoadResult(event, sex, place) -> ResultDetail:
-        item = VasaloppetResultsWrapper.FindResultItem(event, sex, place)
+    def FindResultItem(event, sex, place) -> ResultItem:
+        item = VasaloppetResultsWrapper.GetResultItem(event, sex, place)
         # hack for buggy shifting in html list
         while item.Place != place:
                 placeCorr = place + (place - item.Place)
-                item = VasaloppetResultsWrapper.FindResultItem(event, sex, placeCorr)
-        kvp = VasaloppetResultsWrapper.ParseResult(item.Url)
-        return ResultDetail.Make(sex, kvp)
+                item = VasaloppetResultsWrapper.GetResultItem(event, sex, placeCorr)
+        return item
 
     @staticmethod
-    def FindResultItem(eventID, sex, place) -> ResultItem:
+    def GetResult(url) -> ResultDetail:
+        kvp = VasaloppetResultsWrapper.ParseResult(url)
+        return ResultDetail.Make(kvp)
+
+    @staticmethod
+    def GetResultItem(eventID, sex, place) -> ResultItem:
         resultsPerPage = 100
         page = (place-1)/resultsPerPage + 1
         url = VasaloppetResultsWrapper.MakeUrlFromQuery('?event=%s&num_results=%i&page=%i&search[sex]=%s'%(eventID, resultsPerPage, page, sex.name), 'list')

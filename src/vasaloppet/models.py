@@ -50,7 +50,7 @@ class ResultDetail:
     Overall: OverallItem
 
     @staticmethod
-    def Make(sex, kvp):
+    def Make(kvp):
         if kvp['Race Status'] != 'Finished':
             return None
         placeTotal = kvp.get('Place (Total)')
@@ -60,5 +60,6 @@ class ResultDetail:
         nameAndNation = kvp['Name'].rstrip(')').split('(')
         name = nameAndNation[0].rstrip(' ')
         nation = nameAndNation[1]
-        lopper = LopperItem(name, nation, sex.name, kvp.get('Group'), kvp.get('Number'))
+        ageClass = kvp.get('Group')
+        lopper = LopperItem(name, nation, Sex.Parse(ageClass), ageClass, kvp.get('Number'))
         return ResultDetail(int(kvp['Year']), int(kvp['Place']), lopper, overall)

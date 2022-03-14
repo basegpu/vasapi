@@ -27,7 +27,7 @@ wrapper = VasaloppetResultsWrapper()
 app.logger.info('Successfully initialized vasaloppet wrapper.')
 container = ResultContainer(wrapper.FindResultForYearSexPlace)
 app.logger.info('Successfully initialized result container for caching.')
-loader = BackgroundLoader()
+loader = BackgroundLoader(lambda: wrapper.GetLopperList(2022, 100))
 app.logger.info('Successfully started backgruond loader to fill the cache.')
 
 from vasaloppet.endpoints import *
