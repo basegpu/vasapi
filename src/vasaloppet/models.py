@@ -5,6 +5,13 @@ class Sex(Enum):
     M = 1
     W = 2
 
+    @staticmethod
+    def Parse(ageClass):
+        if ageClass.startswith('D'):
+            return Sex.W
+        else:
+            return Sex.M
+
 @dataclass
 class Event:
     Year: int

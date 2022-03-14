@@ -23,3 +23,13 @@ def test_wrapper_get_result_2022(sex, place, expected_group, expected_bib):
     assert result.Year == 2022
     assert result.Overall.StartGroup == expected_group
     assert result.Lopper.Bib == expected_bib
+
+@pytest.mark.parametrize("year,size,expected_size",[
+    (2022, 1, 1),
+    (2020, 37, 37),
+    (1922, 0, 117)
+    ])
+def test_wrapper_get_lopper_list(year, size, expected_size):
+    wrapper = VasaloppetResultsWrapper()
+    loppers = wrapper.GetLopperList(year, size)
+    assert len(loppers) == expected_size
