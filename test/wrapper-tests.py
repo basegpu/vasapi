@@ -12,7 +12,7 @@ def test_wrapper_get_event():
     assert re.match('VL_\d+', event)
 
 @pytest.mark.parametrize("sex,place,expected_group,expected_bib",[
-    (Sex.M, 3362, 'VL6', '6222'),
+    (Sex.M, 3363, 'VL6', '6222'),
     (Sex.M, 1, 'VL0', 'M15'),
     (Sex.W, 100, 'VL4', '20204'),
     (Sex.W, 101, 'VL4', '20142')

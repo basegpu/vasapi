@@ -5,7 +5,7 @@ from vasaloppet.models import *
 def MakeResult(year, sex, place):
     lopper = LopperItem('Daria Cologna', 'SUI', sex.name, 'pros', uuid.uuid4())
     overall = OverallItem('03:14:15', 1000, 'VL0')
-    return Result(year, place, lopper, overall)
+    return ResultDetail(year, place, lopper, overall)
 
 def test_container_init():
     container = ResultContainer(MakeResult)

@@ -11,6 +11,12 @@ class Event:
     ID: str
 
 @dataclass
+class ResultItem:
+    Place: int
+    Sex: str
+    Url: str
+
+@dataclass
 class CacheSize:
     Items: int
     Bytes: int
@@ -30,7 +36,7 @@ class LopperItem:
     Bib: str
 
 @dataclass
-class Result:
+class ResultDetail:
     Year: int
     Place: int
     Lopper: LopperItem
@@ -48,4 +54,4 @@ class Result:
         name = nameAndNation[0].rstrip(' ')
         nation = nameAndNation[1]
         lopper = LopperItem(name, nation, sex.name, kvp.get('Group'), kvp.get('Number'))
-        return Result(int(kvp['Year']), int(kvp['Place']), lopper, overall)
+        return ResultDetail(int(kvp['Year']), int(kvp['Place']), lopper, overall)

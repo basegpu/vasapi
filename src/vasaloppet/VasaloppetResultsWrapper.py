@@ -1,6 +1,6 @@
 import requests, re
 from bs4 import BeautifulSoup
-from .models import Result
+from .models import ResultDetail, ResultItem
 from .utils import *
 
 class VasaloppetResultsWrapper:
@@ -29,18 +29,22 @@ class VasaloppetResultsWrapper:
         event = self.FindEventIdForYear(year)
         return VasaloppetResultsWrapper.LoadResult(event, sex, place)
 
-    @staticmethod
-    def LoadResult(event, sex, place):
-        url, placeFound = VasaloppetResultsWrapper.GetResultUrl(event, sex, place)
-        # hack for buggy shifting in html list
-        while placeFound != place:
-                placeCorr = place + (place - placeFound)
-                url, placeFound = VasaloppetResultsWrapper.GetResultUrl(event, sex, placeCorr)
-        kvp = VasaloppetResultsWrapper.ParseResult(url)
-        return Result.Make(sex, kvp)
+    def GetResultList(self, year, size = 0):
+        pass
+
 
     @staticmethod
-    def GetResultUrl(eventID, sex, place):
+    def LoadResult(event, sex, place):
+        item = VasaloppetResultsWrapper.FindResultItem(event, sex, place)
+        # hack for buggy shifting in html list
+        while item.Place != place:
+                placeCorr = place + (place - item.Place)
+                item = VasaloppetResultsWrapper.FindResultItem(event, sex, placeCorr)
+        kvp = VasaloppetResultsWrapper.ParseResult(item.Url)
+        return ResultDetail.Make(sex, kvp)
+
+    @staticmethod
+    def FindResultItem(eventID, sex, place):
         resultsPerPage = 100
         page = (place-1)/resultsPerPage + 1
         url = VasaloppetResultsWrapper.MakeUrlFromQuery('?event=%s&num_results=%i&page=%i&search[sex]=%s'%(eventID, resultsPerPage, page, sex.name), isList=True)
@@ -51,7 +55,7 @@ class VasaloppetResultsWrapper:
         place = int(row.find('div', class_='numeric').get_text())
         linkCell = row.find('h4', class_='type-fullname')
         detailQuery = linkCell.find("a", href=True)["href"]
-        return (VasaloppetResultsWrapper.MakeUrlFromQuery(detailQuery), place)
+        return ResultItem(place, sex.name, VasaloppetResultsWrapper.MakeUrlFromQuery(detailQuery))
 
     @staticmethod
     def ParseResult(resultUrl):
