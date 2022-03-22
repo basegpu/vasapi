@@ -13,7 +13,7 @@ CMD /bin/bash
 FROM build AS test
 RUN pip3 install pytest
 COPY test/ test/
-CMD pytest test/Test*.py -v --junitxml="output/testresults.xml"
+CMD pytest test/Test*Loader.py -v --junitxml="output/testresults.xml"
 
 FROM build AS runtime
 COPY src/main.py .
