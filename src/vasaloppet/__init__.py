@@ -23,19 +23,17 @@ app.config.update({
 docs = FlaskApiSpec(app)
 
 app.logger.setLevel(logging.INFO)
-wrapper = VasaloppetResultsWrapper()
+dataProvider = VasaloppetResultsWrapper()
 app.logger.info('Successfully initialized vasaloppet wrapper.')
-container = ResultContainer(wrapper.FindResultForYearSexPlace)
+container = ResultContainer(dataProvider)
 app.logger.info('Successfully initialized result container for caching.')
-loader = BackgroundLoader(lambda: wrapper.GetLopperList(2022, 100))
+loader = BackgroundLoader(container)
 app.logger.info('Successfully started backgruond loader to fill the cache.')
 
 from vasaloppet.endpoints import *
 
-api.add_resource(EventFinder, '/event/<int:year>')
 api.add_resource(ResultFinder, '/result/<int:year>/<string:sex>/<int:place>')
 api.add_resource(CacheManager, '/cache')
 
-docs.register(EventFinder)
 docs.register(ResultFinder)
 docs.register(CacheManager)

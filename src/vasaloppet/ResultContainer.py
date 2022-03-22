@@ -1,6 +1,7 @@
 import sys
 from .MultiLevelCacheDic import *
 from .models import Sex, ResultDetail, CacheSize
+from .interfaces import IDataProvider
 
 class SexResults(MultiLevelCacheDic[int, type(ResultDetail)]):
     def __init__(self, resultCall) -> None:
@@ -16,7 +17,9 @@ class ResultCache(MultiLevelCacheDic[int, type(YearResults)]):
 
 class ResultContainer:
 
-    def __init__(self, getter) -> None:
+    def __init__(self, dataProvider) -> None:
+        self.__dataProvider = dataProvider
+        getter = self.__dataProvider.GetResult
         lambdaChain = lambda year: lambda sex: lambda place: getter(year, sex, place)
         self.__cache = ResultCache(lambdaChain)
 
@@ -27,3 +30,6 @@ class ResultContainer:
         N = self.__cache.Integrate(lambda x: len(x))
         size = self.__cache.Integrate(lambda x: sum([sys.getsizeof(r) for i,r in x.items()]))
         return CacheSize(N, size)
+
+    def InitResultList(self):
+        self.__dataProvider.GetInitList(2022, 100)

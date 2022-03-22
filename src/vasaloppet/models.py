@@ -13,11 +13,6 @@ class Sex(Enum):
             return Sex.M
 
 @dataclass
-class Event:
-    Year: int
-    ID: str
-
-@dataclass
 class ResultItem:
     Place: int
     Sex: str

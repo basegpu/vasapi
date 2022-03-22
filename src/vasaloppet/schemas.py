@@ -1,9 +1,5 @@
 from marshmallow import Schema, fields
 
-class EventSchema(Schema):
-    Year = fields.Int(required=True)
-    ID = fields.Str(required=True)
-
 class CacheSizeSchema(Schema):
     Items = fields.Int(required=True)
     Bytes = fields.Int(required=True)

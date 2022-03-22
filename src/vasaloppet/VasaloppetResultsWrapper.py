@@ -1,9 +1,10 @@
 import requests, re
 from bs4 import BeautifulSoup
 from .models import ResultDetail, ResultItem, Sex
+from .interfaces import IDataProvider
 from .utils import *
 
-class VasaloppetResultsWrapper:
+class VasaloppetResultsWrapper(IDataProvider):
     BASE_URL = 'https://results.vasaloppet.se/2022/'
 
     def __init__(self):
@@ -22,15 +23,12 @@ class VasaloppetResultsWrapper:
                     if racePattern.match(o.get_text()):
                         self.__eventDic[y] = o['value']
 
-    def FindEventIdForYear(self, year) -> str:
-        return self.__eventDic[year]
-
-    def FindResultForYearSexPlace(self, year, sex, place) -> ResultDetail:
+    def GetResult(self, year, sex, place) -> ResultDetail:
         event = self.FindEventIdForYear(year)
         item = VasaloppetResultsWrapper.FindResultItem(event, sex, place)
-        return VasaloppetResultsWrapper.GetResult(item.Url)
+        return VasaloppetResultsWrapper.LoadResult(item.Url)
 
-    def GetLopperList(self, year, size = 0) -> list:
+    def GetInitList(self, year, size = 0) -> list:
         event = self.FindEventIdForYear(year)
         page = 0
         tableRows = []
@@ -50,6 +48,9 @@ class VasaloppetResultsWrapper:
                     break
         return loppers
 
+    def FindEventIdForYear(self, year) -> str:
+        return self.__eventDic[year]
+
     @staticmethod
     def FindResultItem(event, sex, place) -> ResultItem:
         item = VasaloppetResultsWrapper.GetResultItem(event, sex, place)
@@ -60,7 +61,7 @@ class VasaloppetResultsWrapper:
         return item
 
     @staticmethod
-    def GetResult(url) -> ResultDetail:
+    def LoadResult(url) -> ResultDetail:
         kvp = VasaloppetResultsWrapper.ParseResult(url)
         return ResultDetail.Make(kvp)
 
