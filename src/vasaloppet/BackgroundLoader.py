@@ -3,14 +3,11 @@ from .utils import *
 
 class BackgroundLoader:
 
-    def __init__(self, container):
-        self.__container = container
-        # start filling the list with results, ready to be parsed for details
-        initCall = self.__container.InitResultList
-        x = threading.Thread(target=self.Task, args=('init result list', initCall), daemon=True)
-        x.start()
-
-    def Task(self, name, callBack):
-        log_to_console('Thread %s: starting'%name)
-        callBack()
-        log_to_console('Thread %s: finished'%name)
+    def __init__(self, initCall, nextCall) -> None:
+        i = threading.Thread(target=initCall, daemon=True)
+        i.start()
+        time.sleep(3.0)
+        n1 = threading.Thread(target=nextCall, daemon=True)
+        n1.start()
+        n2 = threading.Thread(target=nextCall, daemon=True)
+        n2.start()

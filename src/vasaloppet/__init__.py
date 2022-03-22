@@ -23,11 +23,20 @@ app.config.update({
 docs = FlaskApiSpec(app)
 
 app.logger.setLevel(logging.INFO)
+
 dataProvider = VasaloppetResultsWrapper()
 app.logger.info('Successfully initialized vasaloppet wrapper.')
+
 container = ResultContainer(dataProvider)
 app.logger.info('Successfully initialized result container for caching.')
-loader = BackgroundLoader(container)
+
+initConfig = {
+    1922: 1,
+    2022: 10
+}
+# start filling the list with results, ready to be parsed for details
+initCall = lambda: container.InitResultList(initConfig)
+loader = BackgroundLoader(initCall, container.ProcessNextResult)
 app.logger.info('Successfully started backgruond loader to fill the cache.')
 
 from vasaloppet.endpoints import *

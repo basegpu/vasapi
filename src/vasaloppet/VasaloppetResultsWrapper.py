@@ -7,7 +7,7 @@ from .utils import *
 class VasaloppetResultsWrapper(IDataProvider):
     BASE_URL = 'https://results.vasaloppet.se/2022/'
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.__eventDic = {}
         url = VasaloppetResultsWrapper.MakeUrlFromQuery('?', 'list')
         log_to_console('loading event data from: ' + url)
@@ -32,13 +32,14 @@ class VasaloppetResultsWrapper(IDataProvider):
         event = self.FindEventIdForYear(year)
         page = 0
         tableRows = []
-        loppers = []
-        while len(loppers) < size or size == 0:
+        calls = []
+        while len(calls) < size or size == 0:
             if len(tableRows) > 0:
                 row = tableRows.pop(0)
                 candidate = VasaloppetResultsWrapper.ParseResultRow(row)
                 if candidate is not None:
-                    loppers.append(candidate)
+                    call = lambda: VasaloppetResultsWrapper.LoadResult(candidate.Url)
+                    calls.append(call)
             else:
                 page += 1
                 log_to_console('loading page %i from year %i'%(page, year))
@@ -46,7 +47,7 @@ class VasaloppetResultsWrapper(IDataProvider):
                 tableRows = VasaloppetResultsWrapper.ParseResultTable(url)
                 if tableRows is None:
                     break
-        return loppers
+        return calls
 
     def FindEventIdForYear(self, year) -> str:
         return self.__eventDic[year]

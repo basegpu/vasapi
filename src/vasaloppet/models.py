@@ -7,10 +7,10 @@ class Sex(Enum):
 
     @staticmethod
     def Parse(ageClass):
-        if ageClass.startswith('D'):
-            return Sex.W
-        else:
+        if (ageClass is None) or not ageClass.startswith('D'):
             return Sex.M
+        else:
+            return Sex.W
 
 @dataclass
 class ResultItem:
@@ -33,7 +33,7 @@ class OverallItem:
 class LopperItem:
     Name: str
     Nation: str
-    Sex: str
+    Sex: Sex
     Group: str
     Bib: str
 

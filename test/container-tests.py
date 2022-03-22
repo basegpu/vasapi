@@ -38,3 +38,12 @@ def test_container_count():
     assert container.GetCacheSize().Items == 3
     container.Get(1922, Sex.M, 999)
     assert container.GetCacheSize().Items == 4
+
+def test_container_set():
+    container = ResultContainer(TestProvider)
+    assert container.GetCacheSize().Items == 0
+    item = TestProvider.GetResult(2022, Sex.W, 1)
+    container.Set(2022, Sex.W, 1, item)
+    assert container.GetCacheSize().Items == 1
+    container.Get(2022, Sex.W, 1)
+    assert container.GetCacheSize().Items == 1

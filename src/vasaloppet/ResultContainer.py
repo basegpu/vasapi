@@ -1,4 +1,5 @@
 import sys
+from .utils import *
 from .MultiLevelCacheDic import *
 from .models import Sex, ResultDetail, CacheSize
 from .interfaces import IDataProvider
@@ -26,10 +27,22 @@ class ResultContainer:
     def Get(self, year, sex, place) -> ResultDetail:
         return self.__cache.GetOrInit(year).GetOrInit(sex).GetOrInit(place)
 
+    def Set(self, year, sex, place, value) -> None:
+        self.__cache.GetOrInit(year).GetOrInit(sex).AddOrUpdate(place, value)
+
     def GetCacheSize(self) -> CacheSize:
         N = self.__cache.Integrate(lambda x: len(x))
         size = self.__cache.Integrate(lambda x: sum([sys.getsizeof(r) for i,r in x.items()]))
         return CacheSize(N, size)
 
-    def InitResultList(self):
-        self.__dataProvider.GetInitList(2022, 100)
+    def InitResultList(self, initConfig):
+        self.__initList = []
+        for year,N in initConfig.items():
+            newCalls = self.__dataProvider.GetInitList(year, N)
+            self.__initList.extend(newCalls)
+
+    def ProcessNextResult(self):
+        loadResult = self.__initList.pop(0)
+        result = loadResult()
+        self.Set(result.Year, result.Lopper.Sex, result.Place, result)
+        log_to_console('added %s to cache'%result)
