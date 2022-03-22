@@ -35,14 +35,17 @@ class ResultContainer:
         size = self.__cache.Integrate(lambda x: sum([sys.getsizeof(r) for i,r in x.items()]))
         return CacheSize(N, size)
 
-    def InitResultList(self, initConfig):
+    def InitResultList(self, initConfig) -> None:
         self.__initList = []
         for year,N in initConfig.items():
             newCalls = self.__dataProvider.GetInitList(year, N)
             self.__initList.extend(newCalls)
 
-    def ProcessNextResult(self):
+    def ProcessNextResult(self) -> bool:
+        if len(self.__initList) == 0:
+            return False
         loadResult = self.__initList.pop(0)
         result = loadResult()
         self.Set(result.Year, result.Lopper.Sex, result.Place, result)
         log_to_console('added %s to cache'%result)
+        return True
