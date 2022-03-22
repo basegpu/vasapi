@@ -53,7 +53,7 @@ def test_container_cache_init():
     container = ResultContainer(TestProvider)
     initConfig = {
         2000: 1,
-        2010: 10
+        2010: 1
     }
     container.InitResultList(initConfig)
     assert container.GetCacheSize().Items == 0
