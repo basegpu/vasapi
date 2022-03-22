@@ -38,7 +38,7 @@ class VasaloppetResultsWrapper(IDataProvider):
                 row = tableRows.pop(0)
                 candidate = VasaloppetResultsWrapper.ParseResultRow(row)
                 if candidate is not None:
-                    call = lambda: VasaloppetResultsWrapper.LoadResult(candidate.Url)
+                    call = lambda url=candidate.Url: VasaloppetResultsWrapper.LoadResult(url)
                     calls.append(call)
             else:
                 page += 1

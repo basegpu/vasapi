@@ -8,5 +8,5 @@ class BackgroundLoader:
         i.start()
         time.sleep(wait)
         self.__threadPool = [threading.Thread(target=nextCall, daemon=True) for ii in range(N)]
-        self.__threadPool[0].start()
-        self.__threadPool[1].start()
+        for t in self.__threadPool:
+            t.start()

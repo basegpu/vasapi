@@ -21,10 +21,10 @@ class Dummy:
 class TestBackgroundLoader:
 
     def test_init(self):
-        loader = BackgroundLoader(lambda: print("initCall"), 0.5, lambda: print("nextOne"), 2)
+        loader = BackgroundLoader(lambda: print("initCall"), 0.5, lambda: print("nextOne"), 1)
 
     def test_dummy(self):
         dummy = Dummy(10)
-        loader = BackgroundLoader(dummy.InitList, 0.5, dummy.NextOne, 10)
+        loader = BackgroundLoader(dummy.InitList, 0.5, dummy.NextOne, 2)
         time.sleep(0.1)
         assert dummy.Counter == 3
