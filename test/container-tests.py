@@ -11,7 +11,8 @@ class TestProvider(IDataProvider):
         return ResultDetail(year, place, lopper, overall)
 
     def GetInitList(year, size):
-        pass
+        return [lambda place=ii+1: TestProvider.GetResult(year, Sex.W, place) for ii in range(size)]
+
 
 def test_container_init():
     container = ResultContainer(TestProvider)
@@ -47,3 +48,18 @@ def test_container_set():
     assert container.GetCacheSize().Items == 1
     container.Get(2022, Sex.W, 1)
     assert container.GetCacheSize().Items == 1
+
+def test_container_cache_init():
+    container = ResultContainer(TestProvider)
+    initConfig = {
+        2000: 1,
+        2010: 10
+    }
+    container.InitResultList(initConfig)
+    assert container.GetCacheSize().Items == 0
+    container.ProcessNextResult()
+    assert container.GetCacheSize().Items == 1
+    container.ProcessNextResult()
+    container.ProcessNextResult()
+    container.ProcessNextResult()
+    assert container.GetCacheSize().Items == 4

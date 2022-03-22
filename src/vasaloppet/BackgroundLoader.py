@@ -3,10 +3,10 @@ from .utils import *
 
 class BackgroundLoader:
 
-    def __init__(self, initCall, nextCall) -> None:
+    def __init__(self, initCall, wait, nextCall) -> None:
         i = threading.Thread(target=initCall, daemon=True)
         i.start()
-        time.sleep(3.0)
+        time.sleep(wait)
         n1 = threading.Thread(target=nextCall, daemon=True)
         n1.start()
         n2 = threading.Thread(target=nextCall, daemon=True)

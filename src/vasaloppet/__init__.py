@@ -36,7 +36,7 @@ initConfig = {
 }
 # start filling the list with results, ready to be parsed for details
 initCall = lambda: container.InitResultList(initConfig)
-loader = BackgroundLoader(initCall, container.ProcessNextResult)
+loader = BackgroundLoader(initCall, 3.0, container.ProcessNextResult)
 app.logger.info('Successfully started backgruond loader to fill the cache.')
 
 from vasaloppet.endpoints import *
