@@ -31,12 +31,12 @@ container = ResultContainer(dataProvider)
 app.logger.info('Successfully initialized result container for caching.')
 
 initConfig = {
-    1922: 1,
-    2022: 10
+    1922: 0,
+    2022: 0
 }
 # start filling the list with results, ready to be parsed for details
 initCall = lambda: container.InitResultList(initConfig)
-loader = BackgroundLoader(initCall, 3.0, container.ProcessNextResult, 10)
+loader = BackgroundLoader(initCall, container.ProcessNextResult, 10)
 app.logger.info('Successfully started backgruond loader to fill the cache.')
 
 from vasaloppet.endpoints import *
