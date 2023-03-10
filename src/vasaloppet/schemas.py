@@ -1,23 +1,24 @@
 from marshmallow import Schema, fields
 
-class CacheSizeSchema(Schema):
-    Items = fields.Int(required=True)
-    Bytes = fields.Int(required=True)
+
+class RaceSchema(Schema):
+    Event = fields.Str(required=True)
+    Year = fields.Int(required=True)
+    Status = fields.Str(required=True)
 
 class LopperSchema(Schema):
-    Name = fields.Str(default='')
-    Nation = fields.Str(default='')
-    Sex = fields.Str(required=True)
-    Group = fields.Str(default='')
-    Bib = fields.Str(default='')
-
-class OverallSchema(Schema):
-    Time = fields.Str(required=True)
-    Place = fields.Int(required=True)
-    StartGroup = fields.Str(default='')
+    Name = fields.Str(required=True)
+    Nation = fields.Str(allow_none=True)
+    Sex = fields.Str(allow_none=True)
+    Group = fields.Str(allow_none=True)
+    Bib = fields.Str(allow_none=True)
+    StartGroup = fields.Str(allow_none=True)
+    PlaceOverall = fields.Int(allow_none=True)
 
 class ResultSchema(Schema):
-    Year = fields.Int(required=True)
-    Place = fields.Int(required=True)
+    Race = fields.Nested(RaceSchema, required=True)
     Lopper = fields.Nested(LopperSchema, required=True)
-    Overall = fields.Nested(OverallSchema, required=True)
+    Split = fields.Str(required=True)
+    Time = fields.Str(required=True)
+    Place = fields.Int(required=True)
+    

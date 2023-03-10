@@ -28,5 +28,9 @@ app.logger.info('Successfully initialized vasaloppet wrapper.')
 
 from api.endpoints import *
 
-api.add_resource(ResultFinder, '/result/<int:year>/<string:sex>/<int:place>')
+api.add_resource(
+    ResultFinder,
+    '/result/<int:year>/<string:sex>/<int:place>',
+    resource_class_kwargs = {'logger': app.logger}
+)
 docs.register(ResultFinder)

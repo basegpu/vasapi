@@ -1,5 +1,6 @@
 from enum import Enum
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 
 class Sex(Enum):
     M = 1
@@ -19,15 +20,10 @@ class ResultItem:
     Url: str
 
 @dataclass
-class CacheSize:
-    Items: int
-    Bytes: int
-
-@dataclass
-class OverallItem:
-    Time: str
-    Place: int
-    StartGroup: str
+class RaceItem:
+    Event: str
+    Year: int
+    Status: str
 
 @dataclass
 class LopperItem:
@@ -36,24 +32,50 @@ class LopperItem:
     Sex: Sex
     Group: str
     Bib: str
+    StartGroup: str
+    PlaceOverall: int
 
 @dataclass
 class ResultDetail:
-    Year: int
-    Place: int
+    Race: RaceItem
     Lopper: LopperItem
-    Overall: OverallItem
+    Split: str
+    Time: str
+    Place: int
 
     @staticmethod
     def Make(kvp):
-        if kvp['Race Status'] != 'Finished':
-            return None
-        pt = kvp.get('Place (Total)')
-        placeTotal = int(pt) if pt.isdigit() else None
-        overall = OverallItem(kvp['Time Total (Brutto)'], placeTotal, kvp.get('Start Group'))
+        # the race
+        race = RaceItem(
+            kvp.get('Event'),
+            _try_make_int(kvp.get('Year')),
+            kvp.get('Race Status') or None)
+        # the lopper
+        placeTotal = _try_make_int(kvp.get('Place (Total)'))
         nameAndNation = kvp['Name'].rstrip(')').split('(')
         name = nameAndNation[0].rstrip(' ')
         nation = nameAndNation[1]
         ageClass = kvp.get('Group')
-        lopper = LopperItem(name, nation, Sex.Parse(ageClass), ageClass, kvp.get('Number'))
-        return ResultDetail(int(kvp['Year']), int(kvp['Place']), lopper, overall)
+        lopper = LopperItem(
+            name,
+            nation,
+            Sex.Parse(ageClass),
+            ageClass,
+            kvp.get('Number'),
+            kvp.get('Start Group'),
+            placeTotal)
+        # result detail
+        time = kvp.get('Time Total (Brutto)')
+        return ResultDetail(
+            race,
+            lopper,
+            'Finish',
+            time,
+            _try_make_int(kvp.get('Place')))
+    
+
+def _try_make_int(value: str) -> int | None:
+    if value != None and value.isdigit():
+        return int(value)
+    else:
+        return None

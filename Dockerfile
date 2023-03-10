@@ -20,4 +20,4 @@ CMD gunicorn -w 1 -b 0.0.0.0:$PORT "main:app"
 
 FROM build AS load
 COPY src/load.py .
-CMD python load.py
+CMD python load.py > data/out.log

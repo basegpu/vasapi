@@ -1,40 +1,56 @@
 import json
-import logging
 import sys
 import traceback
+from flatten_json import flatten
+from multiprocessing import Pool
 from vasaloppet.scraping import *
-from vasaloppet.schemas import *
+from vasaloppet.logger import *
+from vasaloppet.schemas import ResultSchema
 
-root = logging.getLogger()
-root.setLevel(logging.DEBUG)
-handler = logging.StreamHandler(sys.stdout)
-handler.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-handler.setFormatter(formatter)
-root.addHandler(handler)
+config = [
+    (2022, 0),
+    (2020, 0),
+    (2019, 0),
+    (2018, 0),
+    (2017, 0),
+    (2016, 0),
+    (2015, 0),
+    (2014, 0),
+    (2013, 0),
+    (2012, 0)
+]
 
 dataProvider = VasaloppetScraper()
 
-year = 2022
-n = 0
-
-for i,c in enumerate(dataProvider.GetInitList(year, n)):
+def load_task(url: str, i: int, n: int) -> None:
     # load data
     try:
-        result = c()
+        result = dataProvider.LoadResult(url)
+        year = result.Race.Year
     except Exception:
-        logging.error(f'something went wrong while loading {i}/{n}')
-        logging.error(traceback.print_exc())
+        logger.error(f'something went wrong while loading {i}/{n}')
+        logger.error(traceback.print_exc())
     else:
         # dump data
         try:
             data = ResultSchema().dump(result)
-            with open(f'data/vasaloppet.json', 'a', encoding='utf8') as outfile:
+            data = flatten(data)
+            with open(f'data/vasaloppet_{year}.json', 'a', encoding='utf8') as outfile:
                 json.dump(data, outfile, ensure_ascii=False)
                 outfile.write('\n')
         except Exception as e:
-            logging.error(f'something went wrong while dumping {i}/{n}: {e}')
-            logging.debug(f'{result}')
+            logger.error(f'something went wrong while dumping {i}/{n}: {e}')
+            logger.info(f'{result}')
         else:
-            logging.info(f'successfully processed {i}/{n}')
-    
+            logger.info(f'successfully processed {i}/{n}')
+
+
+urls = []
+with Pool(8) as pool:
+    for u in pool.starmap(dataProvider.GetInitList, config):
+        urls.extend(u)
+
+with Pool(8) as pool:
+    n = len(urls)
+    items = [(u, i, n) for i,u in enumerate(urls)]
+    pool.starmap(load_task, items)

@@ -2,7 +2,7 @@ import requests, re
 from bs4 import BeautifulSoup
 from .models import ResultDetail, ResultItem, Sex
 from .interfaces import IDataProvider
-from .utils import *
+from .logger import *
 
 class VasaloppetScraper(IDataProvider):
     BASE_URL = 'https://results.vasaloppet.se/2023/'
@@ -10,7 +10,7 @@ class VasaloppetScraper(IDataProvider):
     def __init__(self) -> None:
         self.__eventDic = {}
         url = VasaloppetScraper.MakeUrlFromQuery('?', 'list')
-        log_to_console('loading event data from: ' + url)
+        logger.info('loading event data from: ' + url)
         soup = VasaloppetScraper.MakeSoupFromUrl(url)
         eventPattern = re.compile("Vasaloppet (Winter )?\d{4}$")
         racePattern = re.compile("Vasaloppet$")
@@ -28,32 +28,31 @@ class VasaloppetScraper(IDataProvider):
         item = VasaloppetScraper.FindResultItem(event, sex, place)
         return VasaloppetScraper.LoadResult(item.Url)
 
-    def GetInitList(self, year, limit = 0, pages = None) -> list:
+    def GetInitList(self, year: int, limit = 0, pages = None) -> list:
         event = self.FindEventIdForYear(year)
         page = 0
         tableRows = []
-        calls = []
-        while len(calls) < limit or limit == 0:
+        urls = []
+        while len(urls) < limit or limit == 0:
             if len(tableRows) > 0:
                 row = tableRows.pop(0)
                 candidate = VasaloppetScraper.ParseResultRow(row)
                 if candidate is not None:
-                    call = lambda url=candidate.Url: VasaloppetScraper.LoadResult(url)
-                    calls.append(call)
+                    urls.append(candidate.Url)
             else:
                 page += 1
-                log_to_console('loading page %i from year %i'%(page, year))
+                logger.info('loading page %i from year %i'%(page, year))
                 url = VasaloppetScraper.MakeUrlFromQuery('?page=%i&event=%s&lang=EN_CAP'%(page, event), 'search')
                 tableRows = VasaloppetScraper.ParseResultTable(url)
                 if tableRows is None:
                     break
-        return calls
+        return urls
 
-    def FindEventIdForYear(self, year) -> str:
+    def FindEventIdForYear(self, year: int) -> str:
         return self.__eventDic[year]
 
     @staticmethod
-    def FindResultItem(event, sex, place) -> ResultItem:
+    def FindResultItem(event: str, sex: Sex, place: int) -> ResultItem:
         item = VasaloppetScraper.GetResultItem(event, sex, place)
         # hack for buggy shifting in html list
         while item.Place != place:
@@ -62,18 +61,16 @@ class VasaloppetScraper(IDataProvider):
         return item
 
     @staticmethod
-    def LoadRow(url) -> dict[str, str]:
+    def LoadRow(url: str) -> dict[str, str]:
         return VasaloppetScraper.ParseResult(url)
 
     @staticmethod
-    def LoadResult(url) -> ResultDetail:
-        log_to_console(url)
+    def LoadResult(url: str) -> ResultDetail:
         kvp = VasaloppetScraper.LoadRow(url)
-        log_to_console(kvp)
         return ResultDetail.Make(kvp)
 
     @staticmethod
-    def GetResultItem(eventID, sex, place) -> ResultItem:
+    def GetResultItem(eventID: str, sex: Sex, place: int) -> ResultItem:
         resultsPerPage = 100
         page = (place-1)/resultsPerPage + 1
         url = VasaloppetScraper.MakeUrlFromQuery('?event=%s&num_results=%i&page=%i&search[sex]=%s'%(eventID, resultsPerPage, page, sex.name), 'list')
@@ -83,7 +80,7 @@ class VasaloppetScraper(IDataProvider):
         return VasaloppetScraper.ParseResultRow(row)
 
     @staticmethod
-    def ParseResultTable(tableUrl) -> list:
+    def ParseResultTable(tableUrl: str) -> list:
         soup = VasaloppetScraper.MakeSoupFromUrl(tableUrl)
         rows = soup.find_all('li', class_='row')[1::] # skip header row
         # make sure that first row is not an error
@@ -104,7 +101,7 @@ class VasaloppetScraper(IDataProvider):
         return ResultItem(place, Sex.Parse(sex), VasaloppetScraper.MakeUrlFromQuery(detailQuery))
 
     @staticmethod
-    def ParseResult(resultUrl) -> dict:
+    def ParseResult(resultUrl: str) -> dict:
         soup = VasaloppetScraper.MakeSoupFromUrl(resultUrl)
         details = soup.find('div', class_='detail')
         tables = details.find_all('table', class_='table')
@@ -123,7 +120,7 @@ class VasaloppetScraper(IDataProvider):
         return kvp
 
     @staticmethod
-    def MakeSoupFromUrl(url) -> BeautifulSoup:
+    def MakeSoupFromUrl(url: str) -> BeautifulSoup:
         response = requests.get(url)
         html = response.text
         return BeautifulSoup(html,'html.parser')
