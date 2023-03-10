@@ -48,9 +48,8 @@ class ResultDetail:
     def Make(kvp):
         if kvp['Race Status'] != 'Finished':
             return None
-        placeTotal = kvp.get('Place (Total)')
-        if placeTotal is not None:
-            placeTotal = int(placeTotal)
+        pt = kvp.get('Place (Total)')
+        placeTotal = int(pt) if pt.isdigit() else None
         overall = OverallItem(kvp['Time Total (Brutto)'], placeTotal, kvp.get('Start Group'))
         nameAndNation = kvp['Name'].rstrip(')').split('(')
         name = nameAndNation[0].rstrip(' ')

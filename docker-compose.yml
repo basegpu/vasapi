@@ -23,3 +23,10 @@ services:
       target: test
     volumes:
       - ./test/output:/app/output
+  
+  load:
+    build:
+      context: .
+      target: load
+    volumes:
+      - ./data:/app/data

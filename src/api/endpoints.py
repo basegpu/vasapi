@@ -2,10 +2,10 @@ from flask_restful import Resource
 from flask_apispec import marshal_with, doc
 from flask_apispec.views import MethodResource
 from werkzeug.exceptions import *
-from .models import *
-from .schemas import *
-from .utils import *
-from . import container
+from vasaloppet.models import *
+from vasaloppet.schemas import *
+from vasaloppet.utils import *
+from . import data_provider
 
 class ResultFinder(MethodResource, Resource):
     @doc(
@@ -29,21 +29,7 @@ class ResultFinder(MethodResource, Resource):
     def get(self, year, sex, place):
         try:
             log_to_console('GET: result data for year %i, sex %s, and place %i'%(year, sex, place))
-            result = container.Get(year, Sex[sex.upper()], place)
+            result = data_provider.GetResult(year, Sex[sex.upper()], place)
         except Exception as e:
             raise BadRequest(e)
         return ResultSchema().dump(result)
-
-class CacheManager(MethodResource, Resource):
-    @doc(
-        tags=['ops'],
-        description='Get the number of cached results and the corresponding total size (bytes) in memory.'
-    )
-    @marshal_with(CacheSizeSchema)
-    def get(self):
-        try:
-            log_to_console('GET: cache size')
-            cacheStatus = container.GetCacheSize()
-        except Exception as e:
-            raise BadRequest(e)
-        return CacheSizeSchema().dump(cacheStatus)

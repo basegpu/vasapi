@@ -4,14 +4,14 @@ from .models import ResultDetail, ResultItem, Sex
 from .interfaces import IDataProvider
 from .utils import *
 
-class VasaloppetResultsWrapper(IDataProvider):
-    BASE_URL = 'https://results.vasaloppet.se/2022/'
+class VasaloppetScraper(IDataProvider):
+    BASE_URL = 'https://results.vasaloppet.se/2023/'
 
     def __init__(self) -> None:
         self.__eventDic = {}
-        url = VasaloppetResultsWrapper.MakeUrlFromQuery('?', 'list')
+        url = VasaloppetScraper.MakeUrlFromQuery('?', 'list')
         log_to_console('loading event data from: ' + url)
-        soup = VasaloppetResultsWrapper.MakeSoupFromUrl(url)
+        soup = VasaloppetScraper.MakeSoupFromUrl(url)
         eventPattern = re.compile("Vasaloppet (Winter )?\d{4}$")
         racePattern = re.compile("Vasaloppet$")
         self.__eventDic = {}
@@ -25,26 +25,26 @@ class VasaloppetResultsWrapper(IDataProvider):
 
     def GetResult(self, year, sex, place) -> ResultDetail:
         event = self.FindEventIdForYear(year)
-        item = VasaloppetResultsWrapper.FindResultItem(event, sex, place)
-        return VasaloppetResultsWrapper.LoadResult(item.Url)
+        item = VasaloppetScraper.FindResultItem(event, sex, place)
+        return VasaloppetScraper.LoadResult(item.Url)
 
-    def GetInitList(self, year, size = 0) -> list:
+    def GetInitList(self, year, limit = 0, pages = None) -> list:
         event = self.FindEventIdForYear(year)
         page = 0
         tableRows = []
         calls = []
-        while len(calls) < size or size == 0:
+        while len(calls) < limit or limit == 0:
             if len(tableRows) > 0:
                 row = tableRows.pop(0)
-                candidate = VasaloppetResultsWrapper.ParseResultRow(row)
+                candidate = VasaloppetScraper.ParseResultRow(row)
                 if candidate is not None:
-                    call = lambda url=candidate.Url: VasaloppetResultsWrapper.LoadResult(url)
+                    call = lambda url=candidate.Url: VasaloppetScraper.LoadResult(url)
                     calls.append(call)
             else:
                 page += 1
                 log_to_console('loading page %i from year %i'%(page, year))
-                url = VasaloppetResultsWrapper.MakeUrlFromQuery('?page=%i&event=%s&lang=EN_CAP'%(page, event), 'search')
-                tableRows = VasaloppetResultsWrapper.ParseResultTable(url)
+                url = VasaloppetScraper.MakeUrlFromQuery('?page=%i&event=%s&lang=EN_CAP'%(page, event), 'search')
+                tableRows = VasaloppetScraper.ParseResultTable(url)
                 if tableRows is None:
                     break
         return calls
@@ -54,31 +54,37 @@ class VasaloppetResultsWrapper(IDataProvider):
 
     @staticmethod
     def FindResultItem(event, sex, place) -> ResultItem:
-        item = VasaloppetResultsWrapper.GetResultItem(event, sex, place)
+        item = VasaloppetScraper.GetResultItem(event, sex, place)
         # hack for buggy shifting in html list
         while item.Place != place:
                 placeCorr = place + (place - item.Place)
-                item = VasaloppetResultsWrapper.GetResultItem(event, sex, placeCorr)
+                item = VasaloppetScraper.GetResultItem(event, sex, placeCorr)
         return item
 
     @staticmethod
+    def LoadRow(url) -> dict[str, str]:
+        return VasaloppetScraper.ParseResult(url)
+
+    @staticmethod
     def LoadResult(url) -> ResultDetail:
-        kvp = VasaloppetResultsWrapper.ParseResult(url)
+        log_to_console(url)
+        kvp = VasaloppetScraper.LoadRow(url)
+        log_to_console(kvp)
         return ResultDetail.Make(kvp)
 
     @staticmethod
     def GetResultItem(eventID, sex, place) -> ResultItem:
         resultsPerPage = 100
         page = (place-1)/resultsPerPage + 1
-        url = VasaloppetResultsWrapper.MakeUrlFromQuery('?event=%s&num_results=%i&page=%i&search[sex]=%s'%(eventID, resultsPerPage, page, sex.name), 'list')
-        rows = VasaloppetResultsWrapper.ParseResultTable(url)
+        url = VasaloppetScraper.MakeUrlFromQuery('?event=%s&num_results=%i&page=%i&search[sex]=%s'%(eventID, resultsPerPage, page, sex.name), 'list')
+        rows = VasaloppetScraper.ParseResultTable(url)
         iRow = (place-1)%resultsPerPage
         row = rows[iRow]
-        return VasaloppetResultsWrapper.ParseResultRow(row)
+        return VasaloppetScraper.ParseResultRow(row)
 
     @staticmethod
     def ParseResultTable(tableUrl) -> list:
-        soup = VasaloppetResultsWrapper.MakeSoupFromUrl(tableUrl)
+        soup = VasaloppetScraper.MakeSoupFromUrl(tableUrl)
         rows = soup.find_all('li', class_='row')[1::] # skip header row
         # make sure that first row is not an error
         if rows[0].find('div', class_='alert') is None:
@@ -95,17 +101,18 @@ class VasaloppetResultsWrapper(IDataProvider):
         linkCell = row.find('h4', class_='type-fullname')
         detailQuery = linkCell.find("a", href=True)["href"]
         sex = row.find('div', class_='type-age_class').get_text()
-        return ResultItem(place, Sex.Parse(sex), VasaloppetResultsWrapper.MakeUrlFromQuery(detailQuery))
+        return ResultItem(place, Sex.Parse(sex), VasaloppetScraper.MakeUrlFromQuery(detailQuery))
 
     @staticmethod
     def ParseResult(resultUrl) -> dict:
-        soup = VasaloppetResultsWrapper.MakeSoupFromUrl(resultUrl)
+        soup = VasaloppetScraper.MakeSoupFromUrl(resultUrl)
         details = soup.find('div', class_='detail')
         tables = details.find_all('table', class_='table')
         kvp = {}
         for t in tables:
             if 'table-striped' in t['class']:
-                print('parsing the split table ...')
+                pass
+                #print('parsing the split table ...')
             else:
                 rows = t.tbody.find_all('tr')
                 for r in rows:
@@ -123,7 +130,7 @@ class VasaloppetResultsWrapper(IDataProvider):
 
     @staticmethod
     def MakeUrlFromQuery(query='', pid=None) -> str:
-        url = '%s%s'%(VasaloppetResultsWrapper.BASE_URL, query)
+        url = '%s%s'%(VasaloppetScraper.BASE_URL, query)
         if pid is not None:
             url += '&pid=%s'%pid
         return url
