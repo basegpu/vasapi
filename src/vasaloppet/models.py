@@ -1,10 +1,11 @@
 from enum import Enum
-from dataclasses import dataclass
 from datetime import datetime, timedelta
+from pydantic import BaseModel
 
-class Sex(Enum):
-    M = 1
-    W = 2
+
+class Sex(str, Enum):
+    M = 'M'
+    W = 'W'
 
     @staticmethod
     def Parse(ageClass):
@@ -13,30 +14,29 @@ class Sex(Enum):
         else:
             return Sex.W
 
-@dataclass
-class ResultItem:
+class ResultItem(BaseModel):
     Place: int
     Sex: str
     Url: str
 
-@dataclass
-class RaceItem:
+
+class RaceItem(BaseModel):
     Event: str
     Year: int
     Status: str
 
-@dataclass
-class LopperItem:
-    Name: str
-    Nation: str
-    Sex: Sex
-    Group: str
-    Bib: str
-    StartGroup: str
-    PlaceOverall: int
 
-@dataclass
-class ResultDetail:
+class LopperItem(BaseModel):
+    Name: str
+    Nation: str | None
+    Sex: Sex | None
+    Group: str | None
+    Bib: str | None
+    StartGroup: str | None
+    PlaceOverall: int | None
+
+
+class ResultDetail(BaseModel):
     Race: RaceItem
     Lopper: LopperItem
     Split: str
@@ -47,9 +47,10 @@ class ResultDetail:
     def Make(kvp):
         # the race
         race = RaceItem(
-            kvp.get('Event'),
-            _try_make_int(kvp.get('Year')),
-            kvp.get('Race Status') or None)
+            Event = kvp.get('Event'),
+            Year = _try_make_int(kvp.get('Year')),
+            Status = kvp.get('Race Status') or None
+        )
         # the lopper
         placeTotal = _try_make_int(kvp.get('Place (Total)'))
         nameAndNation = kvp['Name'].rstrip(')').split('(')
@@ -57,21 +58,22 @@ class ResultDetail:
         nation = nameAndNation[1]
         ageClass = kvp.get('Group')
         lopper = LopperItem(
-            name,
-            nation,
-            Sex.Parse(ageClass),
-            ageClass,
-            kvp.get('Number'),
-            kvp.get('Start Group'),
-            placeTotal)
+            Name = name,
+            Nation = nation,
+            Sex = Sex.Parse(ageClass),
+            Group = ageClass,
+            Bib = kvp.get('Number'),
+            StartGroup = kvp.get('Start Group'),
+            PlaceOverall = placeTotal)
         # result detail
         time = kvp.get('Time Total (Brutto)')
         return ResultDetail(
-            race,
-            lopper,
-            'Finish',
-            time,
-            _try_make_int(kvp.get('Place')))
+            Race = race,
+            Lopper = lopper,
+            Split = 'Finish',
+            Time = time,
+            Place = _try_make_int(kvp.get('Place'))
+        )
     
 
 def _try_make_int(value: str) -> int | None:

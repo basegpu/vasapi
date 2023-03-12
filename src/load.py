@@ -1,23 +1,21 @@
 import json
-import sys
 import traceback
 from flatten_json import flatten
 from multiprocessing import Pool
 from vasaloppet.scraping import *
-from vasaloppet.logger import *
-from vasaloppet.schemas import ResultSchema
+from vasaloppet import logger
 
 config = [
     (2022, 0),
-    (2020, 0),
-    (2019, 0),
-    (2018, 0),
-    (2017, 0),
-    (2016, 0),
-    (2015, 0),
-    (2014, 0),
-    (2013, 0),
-    (2012, 0)
+    #(2020, 0),
+    #(2019, 0),
+    #(2018, 0),
+    #(2017, 0),
+    #(2016, 0),
+    #(2015, 0),
+    #(2014, 0),
+    #(2013, 0),
+    #(2012, 0)
 ]
 
 dataProvider = VasaloppetScraper()
@@ -33,8 +31,7 @@ def load_task(url: str, i: int, n: int) -> None:
     else:
         # dump data
         try:
-            data = ResultSchema().dump(result)
-            data = flatten(data)
+            data = flatten(result.dict())
             with open(f'data/vasaloppet_{year}.json', 'a', encoding='utf8') as outfile:
                 json.dump(data, outfile, ensure_ascii=False)
                 outfile.write('\n')
@@ -46,11 +43,11 @@ def load_task(url: str, i: int, n: int) -> None:
 
 
 urls = []
-with Pool(8) as pool:
+with Pool(len(config)) as pool:
     for u in pool.starmap(dataProvider.GetInitList, config):
         urls.extend(u)
 
-with Pool(8) as pool:
+with Pool(16) as pool:
     n = len(urls)
     items = [(u, i, n) for i,u in enumerate(urls)]
     pool.starmap(load_task, items)

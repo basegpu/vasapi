@@ -1,7 +1,6 @@
-Flask>=2.0.1
-flask-restful
-flask-apispec
-flatten_json
-gunicorn<20
 beautifulsoup4
+fastapi
+flatten_json
+pydantic
 requests
+uvicorn

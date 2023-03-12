@@ -2,7 +2,7 @@ import requests, re
 from bs4 import BeautifulSoup
 from .models import ResultDetail, ResultItem, Sex
 from .interfaces import IDataProvider
-from .logger import *
+from . import logger
 
 class VasaloppetScraper(IDataProvider):
     BASE_URL = 'https://results.vasaloppet.se/2023/'
@@ -98,7 +98,11 @@ class VasaloppetScraper(IDataProvider):
         linkCell = row.find('h4', class_='type-fullname')
         detailQuery = linkCell.find("a", href=True)["href"]
         sex = row.find('div', class_='type-age_class').get_text()
-        return ResultItem(place, Sex.Parse(sex), VasaloppetScraper.MakeUrlFromQuery(detailQuery))
+        return ResultItem(
+            Place = place,
+            Sex = sex,
+            Url = VasaloppetScraper.MakeUrlFromQuery(detailQuery)
+        )
 
     @staticmethod
     def ParseResult(resultUrl: str) -> dict:

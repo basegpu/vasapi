@@ -16,7 +16,7 @@ CMD pytest test/Test*.py -v --junitxml="output/testresults.xml"
 FROM build AS runtime
 COPY src/api api
 COPY src/main.py .
-CMD gunicorn -w 1 -b 0.0.0.0:$PORT "main:app"
+CMD uvicorn main:app --reload --host 0.0.0.0 --port $PORT
 
 FROM build AS load
 COPY src/load.py .
