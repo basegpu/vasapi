@@ -1,12 +1,11 @@
 import json
 import traceback
-from flatten_json import flatten
 from multiprocessing import Pool
 from vasaloppet.scraping import *
 from vasaloppet import logger
 
 config = [
-    (2022, 100),
+    (2022, 10),
     #(2020, 0),
     #(2019, 0),
     #(2018, 0),
@@ -31,13 +30,12 @@ def load_task(url: str, i: int, n: int) -> None:
     else:
         # dump data
         try:
-            data = flatten(result.dict())
             with open(f'data/vasaloppet_{year}.json', 'a', encoding='utf8') as outfile:
-                json.dump(data, outfile, ensure_ascii=False)
+                json.dump(result.flatten(), outfile, ensure_ascii=False)
                 outfile.write('\n')
         except Exception as e:
             logger.error(f'something went wrong while dumping {i}/{n}: {e}')
-            logger.info(f'{result}')
+            logger.info(f'{results}')
         else:
             logger.info(f'successfully processed {i}/{n}')
 

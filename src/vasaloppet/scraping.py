@@ -1,8 +1,9 @@
 import requests, re
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 from typing import Tuple
 from .models import ResultDetail, Sex
 from .interfaces import IDataProvider
+from .utils import try_make_int
 from . import logger
 
 
@@ -25,7 +26,7 @@ class VasaloppetScraper(IDataProvider):
                     if racePattern.match(o.get_text()):
                         self.__eventDic[y] = o['value']
 
-    def GetResult(self, year, sex, place) -> ResultDetail:
+    def GetResult(self, year, sex, place) -> list[ResultDetail]:
         event = self.FindEventIdForYear(year)
         url = VasaloppetScraper.FindResult(event, sex, place)
         return VasaloppetScraper.LoadResult(url)
@@ -62,13 +63,45 @@ class VasaloppetScraper(IDataProvider):
         return url
 
     @staticmethod
-    def LoadRow(url: str) -> dict[str, str]:
-        return VasaloppetScraper.ParseResult(url)
+    def LoadResult(url: str) -> ResultDetail:
+        soup = VasaloppetScraper.MakeSoupFromUrl(url)
+        details = soup.find('div', class_='detail')
+        tables = details.find_all('table', class_='table')
+        kvp = VasaloppetScraper.ParseOverallResult(tables)
+        splits = VasaloppetScraper.ParseSplitResult(tables)
+        if len(splits) == 0:
+            place = try_make_int(kvp.get('Place'))
+            if place is not None:
+                splits.append(('Finish', kvp.get('Time Total (Brutto)'), place))
+        return ResultDetail.Make(kvp, splits)
 
     @staticmethod
-    def LoadResult(url: str) -> ResultDetail:
-        kvp = VasaloppetScraper.LoadRow(url)
-        return ResultDetail.Make(kvp)
+    def ParseOverallResult(tables: list[Tag]) -> dict[str, str]:
+        kvp = {}
+        for t in tables:
+            if 'table-striped' not in t['class']:
+                rows = t.tbody.find_all('tr')
+                for r in rows:
+                    th = r.find('th')
+                    td = r.find('td')
+                    if th and td:
+                        kvp[th.get_text()] = td.get_text()
+        return kvp
+    
+    @staticmethod
+    def ParseSplitResult(tables: list[Tag]) -> list[Tuple[str, str, int]]:
+        splits = []
+        for t in tables:
+            if 'table-striped' in t['class']:
+                for row in t.find('tbody').findAll('tr'):
+                    split = row.find('th', class_='desc')
+                    time = row.find('td', class_='time')
+                    place = row.find('td', class_='place right last')
+                    if place is not None:
+                        place = place.get_text()
+                        if try_make_int(place) is not None:
+                            splits.append((split.get_text(), time.get_text(), place))
+        return splits
 
     @staticmethod
     def GetResultRow(eventID: str, sex: Sex, place: int) -> Tuple[str, int]:
@@ -100,25 +133,6 @@ class VasaloppetScraper(IDataProvider):
         detailQuery = linkCell.find("a", href=True)["href"]
         url = VasaloppetScraper.MakeUrlFromQuery(detailQuery)
         return (url, place)
-
-    @staticmethod
-    def ParseResult(resultUrl: str) -> dict:
-        soup = VasaloppetScraper.MakeSoupFromUrl(resultUrl)
-        details = soup.find('div', class_='detail')
-        tables = details.find_all('table', class_='table')
-        kvp = {}
-        for t in tables:
-            if 'table-striped' in t['class']:
-                pass
-                #print('parsing the split table ...')
-            else:
-                rows = t.tbody.find_all('tr')
-                for r in rows:
-                    th = r.find('th')
-                    td = r.find('td')
-                    if th and td:
-                        kvp[th.get_text()] = td.get_text()
-        return kvp
 
     @staticmethod
     def MakeSoupFromUrl(url: str) -> BeautifulSoup:

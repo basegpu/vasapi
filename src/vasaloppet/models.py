@@ -1,6 +1,8 @@
 from enum import Enum
 from pydantic import BaseModel
-
+from typing import Tuple, Any
+from flatten_json import flatten
+from .utils import try_make_int
 
 class Sex(str, Enum):
     M = 'M'
@@ -15,7 +17,7 @@ class Sex(str, Enum):
 
 
 class RaceItem(BaseModel):
-    Event: str
+    Name: str
     Year: int
     Status: str
 
@@ -30,23 +32,30 @@ class LopperItem(BaseModel):
     PlaceOverall: int | None
 
 
+class SplitItem(BaseModel):
+    Split: str
+    Time: str
+    Place: int
+
+
 class ResultDetail(BaseModel):
     Race: RaceItem
     Lopper: LopperItem
-    Split: str
-    Time: str
-    Place: int | None
+    Splits: list[SplitItem]
+
+    def flatten(self) -> dict[str, Any]:
+        return flatten(self.dict())
 
     @staticmethod
-    def Make(kvp):
+    def Make(kvp: dict[str, str], splits: list[Tuple[str, str, int]]):
         # the race
         race = RaceItem(
-            Event = kvp.get('Event'),
-            Year = _try_make_int(kvp.get('Year')),
+            Name = kvp.get('Event'),
+            Year = try_make_int(kvp.get('Year')),
             Status = kvp.get('Race Status') or None
         )
         # the lopper
-        placeTotal = _try_make_int(kvp.get('Place (Total)'))
+        placeTotal = try_make_int(kvp.get('Place (Total)'))
         nameAndNation = kvp['Name'].rstrip(')').split('(')
         name = nameAndNation[0].rstrip(' ')
         nation = nameAndNation[1]
@@ -60,18 +69,8 @@ class ResultDetail(BaseModel):
             StartGroup = kvp.get('Start Group'),
             PlaceOverall = placeTotal)
         # result detail
-        time = kvp.get('Time Total (Brutto)')
         return ResultDetail(
             Race = race,
             Lopper = lopper,
-            Split = 'Finish',
-            Time = time,
-            Place = _try_make_int(kvp.get('Place'))
+            Splits = [SplitItem(Split=s[0], Time=s[1], Place=s[2]) for s in splits]
         )
-    
-
-def _try_make_int(value: str) -> int | None:
-    if value != None and value.isdigit():
-        return int(value)
-    else:
-        return None
