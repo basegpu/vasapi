@@ -1,8 +1,10 @@
 import requests, re
 from bs4 import BeautifulSoup
-from .models import ResultDetail, ResultItem, Sex
+from typing import Tuple
+from .models import ResultDetail, Sex
 from .interfaces import IDataProvider
 from . import logger
+
 
 class VasaloppetScraper(IDataProvider):
     BASE_URL = 'https://results.vasaloppet.se/2023/'
@@ -25,8 +27,8 @@ class VasaloppetScraper(IDataProvider):
 
     def GetResult(self, year, sex, place) -> ResultDetail:
         event = self.FindEventIdForYear(year)
-        item = VasaloppetScraper.FindResultItem(event, sex, place)
-        return VasaloppetScraper.LoadResult(item.Url)
+        url = VasaloppetScraper.FindResult(event, sex, place)
+        return VasaloppetScraper.LoadResult(url)
 
     def GetInitList(self, year: int, limit = 0, pages = None) -> list:
         event = self.FindEventIdForYear(year)
@@ -36,9 +38,8 @@ class VasaloppetScraper(IDataProvider):
         while len(urls) < limit or limit == 0:
             if len(tableRows) > 0:
                 row = tableRows.pop(0)
-                candidate = VasaloppetScraper.ParseResultRow(row)
-                if candidate is not None:
-                    urls.append(candidate.Url)
+                url, _ = VasaloppetScraper.ParseResultRow(row)
+                urls.append(url)
             else:
                 page += 1
                 logger.info('loading page %i from year %i'%(page, year))
@@ -52,13 +53,13 @@ class VasaloppetScraper(IDataProvider):
         return self.__eventDic[year]
 
     @staticmethod
-    def FindResultItem(event: str, sex: Sex, place: int) -> ResultItem:
-        item = VasaloppetScraper.GetResultItem(event, sex, place)
+    def FindResult(event: str, sex: Sex, place: int) -> str:
+        url, foundPlace = VasaloppetScraper.GetResultRow(event, sex, place)
         # hack for buggy shifting in html list
-        while item.Place != place:
+        while foundPlace != place:
                 placeCorr = place + (place - item.Place)
-                item = VasaloppetScraper.GetResultItem(event, sex, placeCorr)
-        return item
+                url, foundPlace = VasaloppetScraper.GetResultRow(event, sex, placeCorr)
+        return url
 
     @staticmethod
     def LoadRow(url: str) -> dict[str, str]:
@@ -70,7 +71,7 @@ class VasaloppetScraper(IDataProvider):
         return ResultDetail.Make(kvp)
 
     @staticmethod
-    def GetResultItem(eventID: str, sex: Sex, place: int) -> ResultItem:
+    def GetResultRow(eventID: str, sex: Sex, place: int) -> Tuple[str, int]:
         resultsPerPage = 100
         page = (place-1)/resultsPerPage + 1
         url = VasaloppetScraper.MakeUrlFromQuery('?event=%s&num_results=%i&page=%i&search[sex]=%s'%(eventID, resultsPerPage, page, sex.name), 'list')
@@ -90,19 +91,15 @@ class VasaloppetScraper(IDataProvider):
             return None
 
     @staticmethod
-    def ParseResultRow(row) -> ResultItem:
+    def ParseResultRow(row) -> Tuple[str, int]:
         try:
             place = int(row.find('div', class_='numeric').get_text())
         except:
-            return None
+            place = None
         linkCell = row.find('h4', class_='type-fullname')
         detailQuery = linkCell.find("a", href=True)["href"]
-        sex = row.find('div', class_='type-age_class').get_text()
-        return ResultItem(
-            Place = place,
-            Sex = sex,
-            Url = VasaloppetScraper.MakeUrlFromQuery(detailQuery)
-        )
+        url = VasaloppetScraper.MakeUrlFromQuery(detailQuery)
+        return (url, place)
 
     @staticmethod
     def ParseResult(resultUrl: str) -> dict:

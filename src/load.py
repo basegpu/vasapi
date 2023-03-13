@@ -6,7 +6,7 @@ from vasaloppet.scraping import *
 from vasaloppet import logger
 
 config = [
-    (2022, 0),
+    (2022, 100),
     #(2020, 0),
     #(2019, 0),
     #(2018, 0),
@@ -49,5 +49,5 @@ with Pool(len(config)) as pool:
 
 with Pool(16) as pool:
     n = len(urls)
-    items = [(u, i, n) for i,u in enumerate(urls)]
+    items = [(u, i+1, n) for i,u in enumerate(urls)]
     pool.starmap(load_task, items)

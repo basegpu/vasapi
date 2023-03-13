@@ -1,5 +1,4 @@
 from enum import Enum
-from datetime import datetime, timedelta
 from pydantic import BaseModel
 
 
@@ -13,11 +12,6 @@ class Sex(str, Enum):
             return Sex.M
         else:
             return Sex.W
-
-class ResultItem(BaseModel):
-    Place: int
-    Sex: str
-    Url: str
 
 
 class RaceItem(BaseModel):
@@ -41,7 +35,7 @@ class ResultDetail(BaseModel):
     Lopper: LopperItem
     Split: str
     Time: str
-    Place: int
+    Place: int | None
 
     @staticmethod
     def Make(kvp):
