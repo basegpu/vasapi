@@ -6,13 +6,14 @@ from vasaloppet.scraping import VasaloppetScraper
 logging.basicConfig(level=logging.INFO)
 
 app = FastAPI(
-    title='Vasaloppet Result API',
-    description='asd',
-    version='2023'
+    title='Vasaloppet Results API',
+    description='return results data from vasaloppet races, gathered from web scraping <a href=https://results.vasaloppet.se/>official site</a>.',
+    version='2023',
+    docs_url="/"
 )
 
 data_provider = VasaloppetScraper()
-logging.info('Successfully initialized vasaloppet wrapper.')
+logging.info('Successfully initialized vasaloppet scraping instance.')
 
 @app.get('/result/{year}/{sex}/{place}')
 async def get_result(
