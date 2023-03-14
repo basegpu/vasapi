@@ -16,7 +16,7 @@ CMD pytest test/Test*.py -v --junitxml="output/testresults.xml"
 FROM build AS runtime
 COPY src/api api
 COPY src/main.py .
-CMD python main.py 
+CMD gunicorn -w 2 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000 main:app
 
 FROM build AS load
 COPY src/load.py .

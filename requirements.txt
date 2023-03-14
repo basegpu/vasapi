@@ -3,4 +3,5 @@ fastapi
 flatten_json
 pydantic
 requests
+gunicorn
 uvicorn
