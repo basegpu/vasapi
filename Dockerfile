@@ -14,9 +14,8 @@ COPY test/ test/
 CMD pytest test/Test*.py -v --junitxml="output/testresults.xml"
 
 FROM build AS runtime
-COPY src/api api
-COPY src/main.py .
-CMD gunicorn -w 2 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000 main:app
+COPY src/api.py .
+CMD uvicorn --host 0.0.0.0 --port 8000 api:app
 
 FROM build AS load
 COPY src/load.py .
