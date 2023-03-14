@@ -5,8 +5,6 @@ services:
     build:
       context: .
       target: runtime
-    environment:
-      - PORT=8000
     ports:
       - 8008:8000
 
