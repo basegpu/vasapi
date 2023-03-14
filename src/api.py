@@ -7,8 +7,9 @@ logging.basicConfig(level=logging.INFO)
 
 app = FastAPI(
     title='Vasaloppet Results API',
-    description='return results data from vasaloppet races, gathered from web scraping https://results.vasaloppet.se/.',
-    version='2023'
+    description='return results data from vasaloppet races, gathered from web scraping <a href=https://results.vasaloppet.se/>official site</a>.',
+    version='2023',
+    docs_url="/"
 )
 
 data_provider = VasaloppetScraper()
