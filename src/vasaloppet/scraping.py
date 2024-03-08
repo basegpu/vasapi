@@ -2,12 +2,11 @@ import requests, re
 from bs4 import BeautifulSoup, Tag
 from typing import Tuple
 from .models import ResultDetail, Sex
-from .interfaces import IDataProvider
 from .utils import try_make_int
 from . import logger
 
 
-class VasaloppetScraper(IDataProvider):
+class VasaloppetScraper():
     BASE_URL = 'https://results.vasaloppet.se/2024/'
 
     def __init__(self) -> None:
@@ -43,7 +42,7 @@ class VasaloppetScraper(IDataProvider):
         nPages = VasaloppetScraper.ParseResultPages(url)
         return nPages
     
-    def GetResultsFromTableUrl(self, url: str) -> list[str]:
+    def GetResultsFromTableUrl(self, url: str) -> list[str]|None:
         tableRows = VasaloppetScraper.ParseResultTable(url)
         if tableRows is None:
             return None

@@ -1,8 +1,8 @@
+import datetime as dt
 from enum import Enum
 from pydantic import BaseModel
 from typing import Tuple, Any
-from flatten_json import flatten
-from .utils import try_make_int
+from .utils import try_make_int, try_make_timedelta
 
 class Sex(str, Enum):
     M = 'M'
@@ -21,6 +21,9 @@ class RaceItem(BaseModel):
     Year: int
     Status: str
 
+    def flatten(self) -> dict[str, Any]:
+        return self.model_dump(exclude={'Name'})
+
 
 class LopperItem(BaseModel):
     Name: str
@@ -31,11 +34,19 @@ class LopperItem(BaseModel):
     StartGroup: str | None
     PlaceOverall: int | None
 
+    def flatten(self) -> dict[str, Any]:
+        dump = self.model_dump(exclude_none=True)
+        dump['Sex'] = dump['Sex'].value
+        return dump
+
 
 class SplitItem(BaseModel):
     Split: str
-    Time: str
+    Time: dt.timedelta | None
     Place: int
+
+    def flatten(self) -> dict[str, Any]:
+        return {f'Time_{self.Split}': self.Time, f'Place_{self.Split}': self.Place}
 
 
 class ResultDetail(BaseModel):
@@ -44,7 +55,10 @@ class ResultDetail(BaseModel):
     Splits: list[SplitItem]
 
     def flatten(self) -> dict[str, Any]:
-        return flatten(self.dict())
+        splits = {}
+        for s in self.Splits:
+            splits.update(s.flatten())
+        return self.Race.flatten() | self.Lopper.flatten() | splits
 
     @staticmethod
     def Make(kvp: dict[str, str], splits: list[Tuple[str, str, int]]):
@@ -56,9 +70,13 @@ class ResultDetail(BaseModel):
         )
         # the lopper
         placeTotal = try_make_int(kvp.get('Place (Total)'))
-        nameAndNation = kvp['Name'].rstrip(')').split('(')
-        name = nameAndNation[0].rstrip(' ')
-        nation = nameAndNation[1]
+        index = kvp['Name'].rfind('(')
+        if index != -1:
+            name = kvp['Name'][:index].rstrip(' ')
+            nation = kvp['Name'][index+1:-1].rstrip(')')
+        else:
+            name = kvp['Name']
+            nation = None
         ageClass = kvp.get('Group')
         lopper = LopperItem(
             Name = name,
@@ -72,5 +90,5 @@ class ResultDetail(BaseModel):
         return ResultDetail(
             Race = race,
             Lopper = lopper,
-            Splits = [SplitItem(Split=s[0], Time=s[1], Place=s[2]) for s in splits]
+            Splits = [SplitItem(Split=s[0], Time=try_make_timedelta(s[1]), Place=try_make_int(s[2])) for s in splits]
         )

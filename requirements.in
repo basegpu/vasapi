@@ -1,0 +1,8 @@
+beautifulsoup4==4.12.3
+fastapi==0.110.0
+requests==2.31.0
+gunicorn==21.2.0
+uvicorn==0.27.1
+pandas==2.2.1
+scipy==1.12.0
+matplotlib==3.8.3
